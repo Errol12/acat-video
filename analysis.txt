@@ -1,0 +1,345 @@
+package com.acat.controller;
+
+import java.awt.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpSession;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+
+
+import org.springframework.web.servlet.ModelAndView;
+
+import com.acat.model.Application;
+import com.acat.model.Application_Attribute;
+import com.acat.model.Userdb;
+import com.acat.services.AppServiceImpl;
+import com.acat.services.ApplicationService;
+import com.acat.services.AttributeService;
+import com.acat.services.UserService;
+
+@Controller
+public class ApplicationController {
+
+	@Autowired
+	private AppServiceImpl appServiceImpl;
+	
+	//@Autowired
+	//private AppServiceImpl appSer;
+	
+	@Autowired
+	private AttributeService attSer;
+
+
+
+	@Autowired
+	HttpSession httpSession;
+
+
+	@RequestMapping(value = "/AddApplicationWindow" , method=RequestMethod.POST)
+	public String addwindow(){
+		httpSession.setAttribute("clientList", appServiceImpl.clientList());
+		return "add_application_window";
+	}
+	
+	@RequestMapping(value = "/home" , method=RequestMethod.POST)
+	public String addhome(){
+		httpSession.setAttribute("clientList", appServiceImpl.clientList());
+		return "home";
+	}
+	
+	@RequestMapping(value = "/DisplayApplicationWindow" , method=RequestMethod.GET)
+	public String displaywindow(){
+		 httpSession.setAttribute("dispApp", appServiceImpl.getAllApp());
+		httpSession.setAttribute("clientList", appServiceImpl.clientList());
+		httpSession.setAttribute("dispApp", appServiceImpl.getAllApp());
+		return "display_application_window";
+	}
+	
+	@RequestMapping(value= "/AddApplication" , method=RequestMethod.POST)
+	public String addApp(int clientid,String appname,String description){
+		System.out.println("this is client id"+clientid);
+		if(appServiceImpl.applicationExists(appname, clientid)){
+			httpSession.setAttribute("clientList", appServiceImpl.clientList());
+			httpSession.setAttribute("dispApp", appServiceImpl.getAllApp());
+			System.out.println("application of the same client already exists"+appname);
+			String appnamemsg=appname+" application already exists";
+			httpSession.setAttribute("appname", appnamemsg);
+			return "add_application_window";
+		}else{
+		Application app=new Application(clientid,appname,description);
+		appServiceImpl.addApplication(app);
+		httpSession.setAttribute("dispApp", appServiceImpl.getAllApp());
+		System.out.println("success" +app);
+		return "redirect:/DisplayApplicationWindow";
+		}
+	}
+	
+
+	@RequestMapping(value="/dispApp",method=RequestMethod.POST)
+	public String dispApplication(String clientid) {
+		String st=clientid;
+		System.out.println("this is client id "+st);
+		System.out.println("this is st "+st);
+		if(st.equals("All")){
+			httpSession.setAttribute("dispApp", appServiceImpl.getAllApp());
+			
+		}else if(st.equals("Blank")){
+			System.out.println("Choose a value");
+		}
+		else{
+		httpSession.setAttribute("dispApp", appServiceImpl.dispApplication(Integer.parseInt(clientid)));
+				}
+		return "display_application_window";
+	}
+
+	@RequestMapping(value = "/EditApplicationWindow" , method=RequestMethod.POST)
+    
+       
+		public ModelAndView editApplicationWindow(int applicationid){
+	     	ModelAndView model;
+	 	    	model=new ModelAndView("edit_application_window");
+	 	    	model.addObject("editApplicationDetails", appServiceImpl.getApplicationEditDetails(applicationid));
+	       	 System.out.println(applicationid);
+	    	  
+	    		return model;
+	
+	
+	}
+
+    
+    @RequestMapping(value= "/editApplication" , method=RequestMethod.POST)
+	public String editApplication(int applicationid,String applicationname,String description){
+  
+   	 System.out.println(applicationid+" "+applicationid);
+	   appServiceImpl.editApplication(applicationid,applicationname,description);
+	   httpSession.setAttribute("dispApp", appServiceImpl.getAllApp());
+		return "redirect:/DisplayApplicationWindow";
+    }
+    
+    
+  
+     
+     @RequestMapping(value= "/editApplicationButton" , method=RequestMethod.POST)
+    	public ModelAndView editClientbutton(int applicationid){
+     	ModelAndView model;
+ 	    	model=new ModelAndView("edit_application_window");
+ 	    	model.addObject("editApplicationDetails", appServiceImpl.getApplicationEditDetails(applicationid));
+       	 System.out.println(applicationid);
+    	  
+    		return model;
+       }
+     
+    @RequestMapping(value= "/deleteApplication" , method=RequestMethod.POST)
+	public String deleteApplication(int applicationid){
+    	System.out.println("hello");
+    	 httpSession.setAttribute("dispApp", appServiceImpl.getAllApp());
+    	System.out.println("hello");
+   	    	 appServiceImpl.deleteApplication(applicationid);
+   	    	
+   		
+   	    	 httpSession.setAttribute("dispApp", appServiceImpl.getAllApp());
+   		 httpSession.setAttribute("ApplicationList", appServiceImpl.getAllApp());
+   	    	return "redirect:/DisplayApplicationWindow";
+   	    
+   	      }
+    
+    @RequestMapping(value = "/DeleteApplicationWindow" , method=RequestMethod.POST)
+    public String deleteClientWindow(){
+   	 httpSession.setAttribute("ApplicationList", appServiceImpl.getAllApp());
+	       return "delete_application_window";
+        }
+
+    
+    @RequestMapping(value = "/AddAttribute" , method=RequestMethod.POST)
+   	public String reg(String check,int application_name,int clientid,String app_category,String app_stage,String driver,String app_database,String platform,String type,String data_confidentiality,String workload_variations ){
+   		
+    	System.out.println(check);
+    	String btn1=check;
+    	System.out.println(application_name+app_category+app_stage+driver+platform+type+ app_database+data_confidentiality+workload_variations);
+   		System.out.println(application_name);System.out.println("client id "+clientid);System.out.println("app_category "+app_category);System.out.println("Stage "+app_stage);
+        System.out.println("End of Driver "+driver);System.out.println("Platform "+platform);System.out.println("Database "+app_database);
+   		System.out.println("Type "+type);System.out.println("Data Confi "+data_confidentiality);System.out.println("Workload Var "+workload_variations);
+   		
+   		Application_Attribute app1 = new Application_Attribute(application_name,1,Integer.parseInt(app_category),clientid);
+   		Application_Attribute app2 = new Application_Attribute(application_name,2,Integer.parseInt(app_stage),clientid);
+   		Application_Attribute app3 = new Application_Attribute(application_name,3,Integer.parseInt(driver),clientid);
+		Application_Attribute app4 = new Application_Attribute(application_name,4,Integer.parseInt(platform),clientid);
+		Application_Attribute app5 = new Application_Attribute(application_name,5,Integer.parseInt(app_database),clientid);
+		Application_Attribute app6 = new Application_Attribute(application_name,6,Integer.parseInt(type),clientid);
+		Application_Attribute app7 = new Application_Attribute(application_name,7,Integer.parseInt(data_confidentiality),clientid);
+		Application_Attribute app8 = new Application_Attribute(application_name,8,Integer.parseInt(workload_variations),clientid);
+   		
+   		
+   		attSer.addAppAttribute(app1);attSer.addAppAttribute(app2);attSer.addAppAttribute(app3);
+   		attSer.addAppAttribute(app4);
+   		attSer.addAppAttribute(app5);	attSer.addAppAttribute(app6);
+   		attSer.addAppAttribute(app7);attSer.addAppAttribute(app8);
+   		httpSession.setAttribute("dispApp", appServiceImpl.getAllApp());
+   		return "display_application_window";
+   			
+   		
+   		
+   	}
+    
+    @RequestMapping(value = "/CheckAttribute" , method=RequestMethod.POST)
+   	public String reg1(int application_name,String privateC,String publicC,int clientid,String app_category,String app_stage,String driver,String platform,String type,String data_confidentiality,String iaas,String ACF,String Apprenda)
+   	{
+   	
+    	System.out.println(application_name+app_category+app_stage+driver+platform+type+data_confidentiality);
+   		System.out.println(application_name);System.out.println("client id "+clientid);System.out.println("app_category "+app_category);
+   		System.out.println("Stage "+app_stage);
+        System.out.println("End of Driver "+driver);System.out.println("Platform "+platform);
+   		System.out.println("Type "+type);System.out.println("Data Confi "+data_confidentiality);
+   		System.out.println("Iaas"+iaas);
+   		System.out.println("Acf "+ACF);
+   		System.out.println("apprenda "+Apprenda);
+   		System.out.println("Private Cloud"+privateC);
+   		System.out.println("Public Cloud"+publicC);
+   		if(publicC!=null){
+   			System.out.println("hi");
+   		}
+   		
+   		
+   		String existingplat;
+   		String disposition="";
+   		String Tool="";
+   		String CloudSuitablity="";
+   		
+   		
+   		if(app_stage.equalsIgnoreCase("Approaching End Of Life") && driver.equalsIgnoreCase("Technology")){
+   			disposition="develop";
+   			  if(disposition.equalsIgnoreCase("develop")){
+   				  if(ACF!=null){
+   					  Tool="Atos Cloud Foundry";
+   				  }
+   				  else if(Apprenda!=null){
+   					  Tool="Apprenda";
+   				  }else{
+   					  Tool="Iass";
+   				  }
+   			  }
+   		}
+   		else if(app_stage.equalsIgnoreCase("End Of Life") && driver.equalsIgnoreCase("Technology")){
+   			disposition="develop";
+ 			  if(disposition.equalsIgnoreCase("develop")){
+ 				  if(ACF!=null){
+ 					  Tool="Atos Cloud Foundry";
+ 				  }
+ 				  else if(Apprenda!=null){
+ 					  Tool="Apprenda";
+ 				  }else{
+ 					  Tool="Iass";
+ 				  }
+ 			  }
+   		}else if(app_stage.equalsIgnoreCase("New Application") || app_stage.equalsIgnoreCase("Supported/Managed")){
+   			disposition="modernise";
+   			if(disposition.equalsIgnoreCase("modernise")){
+   				if(platform.equalsIgnoreCase("Microsoft .Net") || platform.equalsIgnoreCase("Hybrid(MS+JAVA)") || platform.equalsIgnoreCase("Microsoft Legacy")){
+   					if(Apprenda!=null){
+   						Tool="Apprenda";
+   					} 
+   					else if(ACF!=null){
+   					  Tool="Atos Cloud Foundry";
+   				  }else{
+   					  Tool="Iass";disposition="Migrate";
+   				  }
+   				}else if(platform.equalsIgnoreCase("JAVA/J2EE") || platform.equalsIgnoreCase("Opensource(PHP,RUBY)")){
+   				    if(ACF!=null){
+					  Tool="Atos Cloud Foundry";
+				    }
+				    else if(Apprenda!=null){
+					  Tool="Apprenda";
+				  }else{
+					  Tool="Iass";disposition="Migrate";
+				  }
+   					
+   				}else if((platform.equalsIgnoreCase("COTS") || platform.equalsIgnoreCase("Sharepoint")) && type.equalsIgnoreCase("Web")){
+   					//disposition="develop";
+   					Tool="Iass";disposition="Migrate";
+   					
+   				}
+   			}
+   			
+   			
+   		}
+   		if(type.equalsIgnoreCase("Desktop/Thick client")){
+   			disposition="develop";
+   			if(disposition.equalsIgnoreCase("develop")){
+   				
+   					if(ACF!=null){
+   						System.out.println("hi");
+  					  Tool="Atos Cloud Foundry";
+  				    }
+  				    else if(Apprenda!=null){System.out.println("hi2");
+  					  Tool="Apprenda";
+  				  }else{
+  					  Tool="Iass";
+  					  //disposition="Migrate";
+  				  }
+   				}else if((platform.equalsIgnoreCase("COTS") || platform.equalsIgnoreCase("Sharepoint") || platform.equalsIgnoreCase("Oracle Suite")) && type.equalsIgnoreCase("Web")){
+   					//disposition="develop";
+   					Tool="Iass";
+   					disposition="Migrate";
+   					
+   				}else if((platform.equalsIgnoreCase("COTS") || platform.equalsIgnoreCase("Sharepoint") || platform.equalsIgnoreCase("Oracle Suite")) && type.equalsIgnoreCase("Desktop/Thick client")){
+   					Tool="Iass";
+   					disposition="Develop";
+   				}
+   			}
+   		
+   		
+   		if(privateC!=null && publicC!=null){
+	   			
+	   			if(data_confidentiality.equalsIgnoreCase("Cannot be placed outside enterprise firewall")){
+		   			CloudSuitablity="Private";
+		   			
+		   		}else {
+		   			CloudSuitablity="Public";
+		   		}
+		   	}else if(publicC!=null && privateC==null){
+	   			CloudSuitablity="Public";
+	   		}else if(publicC==null && privateC!=null){
+	   			CloudSuitablity="Private";
+	   		}
+   	
+   		
+   		
+   		if(app_stage.equalsIgnoreCase("End Of Life") && driver.equalsIgnoreCase("Business")){
+   			disposition="Retire";
+   			CloudSuitablity="NA";
+   			Tool="NA";
+   		}else if(app_stage.equalsIgnoreCase("Approaching End Of Life") && driver.equalsIgnoreCase("Business")){
+   			disposition="Retain";
+   			CloudSuitablity="NA";
+   			Tool="NA";
+   		}
+   		if(platform.equalsIgnoreCase("Others")){
+   			disposition="need analysis";
+   			Tool="need analysis";
+   			CloudSuitablity="NA";
+   		}
+   		
+   		
+   		System.out.println();
+   		System.out.println();
+   		System.out.println(disposition+" "+Tool+" "+CloudSuitablity);
+   		
+   		
+
+
+
+
+   	
+   		return "viewdisp";
+   			
+   		
+   		
+   	}
+
+}	
+

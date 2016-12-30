@@ -1,0 +1,1 @@
+SELECT * FROM acat3.value;
